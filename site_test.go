@@ -23,7 +23,9 @@ func returnDummySite() *Site {
 	return site
 }
 
+// This test function and TestInvalidSite are dependant on the ahps2 service. If that is down or just slow these will fail
 func TestValidSite(t *testing.T) {
+	t.Parallel()
 	site, err := GetSite(validGauge)
 	if err != nil {
 		t.Errorf("Error in valid gauge: %s", err.Error())
@@ -34,6 +36,7 @@ func TestValidSite(t *testing.T) {
 }
 
 func TestInvalidSite(t *testing.T) {
+	t.Parallel()
 	site, err := GetSite(invalidGauge)
 	if err == nil {
 		t.Errorf("Expected error for invalid gauge")
@@ -44,6 +47,7 @@ func TestInvalidSite(t *testing.T) {
 }
 
 func TestGetStage(t *testing.T) {
+	t.Parallel()
 	validStages := map[string]bool{"low": true, "action": true, "bankfull": true, "flood": true, "moderate": true, "major": true, "record": true}
 	site := returnDummySite()
 	stage, err := site.GetStage()
@@ -56,6 +60,7 @@ func TestGetStage(t *testing.T) {
 }
 
 func TestGetLevel(t *testing.T) {
+	t.Parallel()
 	cst := time.FixedZone("CST", int((-6 * time.Hour).Seconds()))
 	site := returnDummySite()
 	level, err := site.GetLevel()
