@@ -14,6 +14,7 @@ const (
 	AHPS2_URL = "https://water.weather.gov/ahps2/hydrograph_to_xml.php?output=xml"
 )
 
+// Site is the object containing all of the information about this measuring site.
 type Site struct {
 	XMLName                   xml.Name `xml:"site"`
 	Text                      string   `xml:",chardata"`
@@ -167,12 +168,14 @@ type Site struct {
 	} `xml:"forecast"`
 }
 
+// RiverPoint is a specific datapoint for a given time. This is usually returned by the Site object's public functions.
 type RiverPoint struct {
 	Value     float64
 	Unit      string
 	Timestamp time.Time
 }
 
+// GetStage returns the current flood stage level
 // This function assumes Sigstages are always in order
 func (s *Site) GetStage() (string, error) {
 	resp := "unknown"
@@ -197,6 +200,7 @@ func (s *Site) GetStage() (string, error) {
 	return resp, nil
 }
 
+// GetLevel returns a RiverPoint containing the current river level and any error occurred in parsing the data.
 func (s *Site) GetLevel() (*RiverPoint, error) {
 	mostRecent := s.Observed.Datum[0]
 	cLevel, err := strconv.ParseFloat(mostRecent.Primary.Text, 32)
@@ -211,6 +215,7 @@ func (s *Site) GetLevel() (*RiverPoint, error) {
 	return &RiverPoint{Value: cLevel, Unit: unit, Timestamp: timeStamp}, nil
 }
 
+// GetCrest returns a RiverPoint containing the projected crest and any error occurred in parsing the data.
 func (s *Site) GetCrest() (*RiverPoint, error) {
 	var forecast = s.Forecast.Datum
 	var crest = &RiverPoint{}
@@ -241,6 +246,8 @@ func (s *Site) GetCrest() (*RiverPoint, error) {
 	return crest, nil
 }
 
+// GetSite retrieves the data for the specified gauge and unmarshals it into a Site object
+// It returns a site object and any error occurred during retrieval and unmarshalling
 func GetSite(gauge string) (*Site, error) {
 	site := &Site{}
 	u, _ := url.Parse(AHPS2_URL)
