@@ -27,9 +27,9 @@ type PointDatum struct {
 	Text    string  `xml:",chardata"`
 	Valid   pdValid `xml:"valid"`
 	Primary struct {
-		Text  string `xml:",chardata"`
-		Name  string `xml:"name,attr"`
-		Units string `xml:"units,attr"`
+		Value float64 `xml:",chardata"`
+		Name  string  `xml:"name,attr"`
+		Units string  `xml:"units,attr"`
 	} `xml:"primary"`
 	Secondary struct {
 		Text  string `xml:",chardata"`
@@ -175,16 +175,13 @@ type RiverPoint struct {
 func (s *Site) GetStage() (string, error) {
 	resp := "unknown"
 	mostRecent := s.Observed.Datum[0]
-	cLevel, err := strconv.ParseFloat(mostRecent.Primary.Text, 32)
-	if err != nil {
-		return "", err
-	}
+	cLevel := mostRecent.Primary.Value
 	stages := s.Sigstages
 	v := reflect.ValueOf(stages)
 	typeOfS := v.Type()
 	for i := 1; i < v.NumField(); i++ {
 		FName := typeOfS.Field(i).Name
-		FVal, err := strconv.ParseFloat(v.Field(i).FieldByName("Text").String(), 32)
+		FVal, err := strconv.ParseFloat(v.Field(i).FieldByName("Text").String(), 64)
 		if err != nil {
 			return "", err
 		}
@@ -198,14 +195,10 @@ func (s *Site) GetStage() (string, error) {
 // GetLevel returns a RiverPoint containing the current river level and any error occurred in parsing the data.
 func (s *Site) GetLevel() (*RiverPoint, error) {
 	mostRecent := s.Observed.Datum[0]
-	cLevel, err := strconv.ParseFloat(mostRecent.Primary.Text, 32)
-	if err != nil {
-		return nil, err
-	}
-	unit := mostRecent.Primary.Units
+
 	timeStamp := time.Time(mostRecent.Valid)
 
-	return &RiverPoint{Value: cLevel, Unit: unit, Timestamp: timeStamp}, nil
+	return &RiverPoint{Value: mostRecent.Primary.Value, Unit: mostRecent.Primary.Units, Timestamp: timeStamp}, nil
 }
 
 // GetCrest returns a RiverPoint containing the projected crest and any error occurred in parsing the data.
@@ -214,17 +207,15 @@ func (s *Site) GetCrest() (*RiverPoint, error) {
 	var crest = &RiverPoint{}
 	var err error
 	crest.Unit = forecast[0].Primary.Units
-	crest.Value, err = strconv.ParseFloat(forecast[0].Primary.Text, 32)
+	crest.Value = forecast[0].Primary.Value
 	if err != nil {
 		return nil, err
 	}
 	crest.Timestamp = time.Time(forecast[0].Valid)
 
 	for i := range forecast {
-		cV, err := strconv.ParseFloat(forecast[i].Primary.Text, 32)
-		if err != nil {
-			return nil, err
-		}
+		cV := forecast[i].Primary.Value
+
 		if cV > crest.Value {
 			crest.Value = cV
 			crest.Unit = forecast[i].Primary.Units
