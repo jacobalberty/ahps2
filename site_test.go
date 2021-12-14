@@ -54,8 +54,11 @@ func TestGetStage(t *testing.T) {
 	if err != nil {
 		t.Errorf("Got error from GetStage: %s", err.Error())
 	}
-	if _, ok := validStages[stage]; ok {
+	if _, ok := validStages[stage]; !ok {
 		t.Errorf("Got invalid stage '%s'", stage)
+	}
+	if stage != "low" {
+		t.Errorf("Expected stage 'low', got '%s'", stage)
 	}
 }
 

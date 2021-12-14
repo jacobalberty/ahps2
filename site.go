@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
-	"strconv"
+	"strings"
 	"time"
 )
 
@@ -95,32 +95,32 @@ type site struct {
 	Sigstages struct {
 		Text string `xml:",chardata"`
 		Low  struct {
-			Text  string `xml:",chardata"`
-			Units string `xml:"units,attr"`
+			Value float64 `xml:",chardata"`
+			Units string  `xml:"units,attr"`
 		} `xml:"low"`
 		Action struct {
-			Text  string `xml:",chardata"`
-			Units string `xml:"units,attr"`
+			Value float64 `xml:",chardata"`
+			Units string  `xml:"units,attr"`
 		} `xml:"action"`
 		Bankfull struct {
-			Text  string `xml:",chardata"`
-			Units string `xml:"units,attr"`
+			Value float64 `xml:",chardata"`
+			Units string  `xml:"units,attr"`
 		} `xml:"bankfull"`
 		Flood struct {
-			Text  string `xml:",chardata"`
-			Units string `xml:"units,attr"`
+			Value float64 `xml:",chardata"`
+			Units string  `xml:"units,attr"`
 		} `xml:"flood"`
 		Moderate struct {
-			Text  string `xml:",chardata"`
-			Units string `xml:"units,attr"`
+			Value float64 `xml:",chardata"`
+			Units string  `xml:"units,attr"`
 		} `xml:"moderate"`
 		Major struct {
-			Text  string `xml:",chardata"`
-			Units string `xml:"units,attr"`
+			Value float64 `xml:",chardata"`
+			Units string  `xml:"units,attr"`
 		} `xml:"major"`
 		Record struct {
-			Text  string `xml:",chardata"`
-			Units string `xml:"units,attr"`
+			Value float64 `xml:",chardata"`
+			Units string  `xml:"units,attr"`
 		} `xml:"record"`
 	} `xml:"sigstages"`
 	Sigflows struct {
@@ -173,7 +173,6 @@ type RiverPoint struct {
 }
 
 // GetStage returns the current flood stage level
-// This function assumes Sigstages are always in order
 func (s *Site) GetStage() (string, error) {
 	resp := "unknown"
 	mostRecent := s.site.Observed.Datum[0]
@@ -183,12 +182,9 @@ func (s *Site) GetStage() (string, error) {
 	typeOfS := v.Type()
 	for i := 1; i < v.NumField(); i++ {
 		FName := typeOfS.Field(i).Name
-		FVal, err := strconv.ParseFloat(v.Field(i).FieldByName("Text").String(), 64)
-		if err != nil {
-			return "", err
-		}
-		if cLevel >= FVal {
-			resp = FName
+		FVal := v.Field(i).FieldByName("Value").Float()
+		if cLevel >= FVal  {
+			resp = strings.ToLower(FName)
 		}
 	}
 	return resp, nil
@@ -268,5 +264,5 @@ func unMarshalSite(data []byte) (*Site, error) {
 		return nil, err
 	}
 
-	return &Site{site}, nil
+	return &Site{site: site}, nil
 }
