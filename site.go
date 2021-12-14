@@ -24,9 +24,9 @@ type RateDatum struct {
 }
 
 type PointDatum struct {
-	Text    string  `xml:",chardata"`
-	Valid   pdValid `xml:"valid"`
-	Primary struct {
+	Text      string  `xml:",chardata"`
+	Timestamp pdValid `xml:"valid"`
+	Primary   struct {
 		Value float64 `xml:",chardata"`
 		Name  string  `xml:"name,attr"`
 		Units string  `xml:"units,attr"`
@@ -196,7 +196,7 @@ func (s *Site) GetStage() (string, error) {
 func (s *Site) GetLevel() (*RiverPoint, error) {
 	mostRecent := s.Observed.Datum[0]
 
-	timeStamp := time.Time(mostRecent.Valid)
+	timeStamp := time.Time(mostRecent.Timestamp)
 
 	return &RiverPoint{Value: mostRecent.Primary.Value, Unit: mostRecent.Primary.Units, Timestamp: timeStamp}, nil
 }
@@ -211,7 +211,7 @@ func (s *Site) GetCrest() (*RiverPoint, error) {
 	if err != nil {
 		return nil, err
 	}
-	crest.Timestamp = time.Time(forecast[0].Valid)
+	crest.Timestamp = time.Time(forecast[0].Timestamp)
 
 	for i := range forecast {
 		cV := forecast[i].Primary.Value
@@ -219,7 +219,7 @@ func (s *Site) GetCrest() (*RiverPoint, error) {
 		if cV > crest.Value {
 			crest.Value = cV
 			crest.Unit = forecast[i].Primary.Units
-			crest.Timestamp = interface{}(forecast[i].Valid).(time.Time)
+			crest.Timestamp = interface{}(forecast[i].Timestamp).(time.Time)
 		}
 	}
 	return crest, nil
@@ -260,11 +260,11 @@ func getSite(ahps2url, gauge string) (*Site, error) {
 }
 
 func unMarshalSite(data []byte) (*Site, error) {
-	site := &Site{}
+	site := Site{}
 	err := xml.Unmarshal(data, &site)
 	if err != nil {
 		return nil, err
 	}
 
-	return site, nil
+	return &site, nil
 }
