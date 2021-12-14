@@ -12,8 +12,7 @@ import (
 
 const (
 	AHPS2_URL = "https://water.weather.gov/ahps2/hydrograph_to_xml.php?output=xml"
-}
-
+)
 
 type Site struct {
 	XMLName                   xml.Name `xml:"site"`
