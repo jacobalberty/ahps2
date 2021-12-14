@@ -11,7 +11,8 @@ import (
 )
 
 const (
-	AHPS2_URL = "https://water.weather.gov/ahps2/hydrograph_to_xml.php?output=xml"
+	AHPS2_URL  = "https://water.weather.gov/ahps2/hydrograph_to_xml.php?output=xml"
+	TIMEFORMAT = "2006-01-02T15:04:05-07:00"
 )
 
 type RateDatum struct {
@@ -23,11 +24,8 @@ type RateDatum struct {
 }
 
 type PointDatum struct {
-	Text  string `xml:",chardata"`
-	Valid struct {
-		Text     string `xml:",chardata"`
-		Timezone string `xml:"timezone,attr"`
-	} `xml:"valid"`
+	Text    string  `xml:",chardata"`
+	Valid   pdValid `xml:"valid"`
 	Primary struct {
 		Text  string `xml:",chardata"`
 		Name  string `xml:"name,attr"`
@@ -39,6 +37,22 @@ type PointDatum struct {
 		Units string `xml:"units,attr"`
 	} `xml:"secondary"`
 	Pedts string `xml:"pedts"`
+}
+type pdValid time.Time
+
+func (pd *pdValid) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+	var s string
+	var tV time.Time
+	err := d.DecodeElement(&s, &start)
+	if err != nil {
+		return err
+	}
+	tV, err = time.Parse(TIMEFORMAT, s)
+	if err != nil {
+		return err
+	}
+	*pd = pdValid(tV)
+	return nil
 }
 
 // Site is the object containing all of the information about this measuring site.
@@ -189,10 +203,8 @@ func (s *Site) GetLevel() (*RiverPoint, error) {
 		return nil, err
 	}
 	unit := mostRecent.Primary.Units
-	timeStamp, err := time.Parse(time.RFC3339, mostRecent.Valid.Text)
-	if err != nil {
-		return nil, err
-	}
+	timeStamp := time.Time(mostRecent.Valid)
+
 	return &RiverPoint{Value: cLevel, Unit: unit, Timestamp: timeStamp}, nil
 }
 
@@ -206,10 +218,8 @@ func (s *Site) GetCrest() (*RiverPoint, error) {
 	if err != nil {
 		return nil, err
 	}
-	crest.Timestamp, err = time.Parse(time.RFC3339, forecast[0].Valid.Text)
-	if err != nil {
-		return nil, err
-	}
+	crest.Timestamp = time.Time(forecast[0].Valid)
+
 	for i := range forecast {
 		cV, err := strconv.ParseFloat(forecast[i].Primary.Text, 32)
 		if err != nil {
@@ -218,10 +228,7 @@ func (s *Site) GetCrest() (*RiverPoint, error) {
 		if cV > crest.Value {
 			crest.Value = cV
 			crest.Unit = forecast[i].Primary.Units
-			crest.Timestamp, err = time.Parse(time.RFC3339, forecast[i].Valid.Text)
-			if err != nil {
-				return nil, err
-			}
+			crest.Timestamp = interface{}(forecast[i].Valid).(time.Time)
 		}
 	}
 	return crest, nil
