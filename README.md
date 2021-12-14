@@ -6,5 +6,4 @@ This package provides an interface to the National Weather Service [Advanced Hyd
 
 ## Todo List for 1.0
 * Cache layer, these data sets are only updated about once an hour. We can look at Site.Observed.Datum[0].Valid.Text and only pull it again when an hour has passed.
-* Break out reused structures into separate structs that can be re-used.
 * Make the structs more user friendly. Things like Datum.Valid could have a better name and could be parsed into a time object.

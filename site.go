@@ -14,6 +14,33 @@ const (
 	AHPS2_URL = "https://water.weather.gov/ahps2/hydrograph_to_xml.php?output=xml"
 )
 
+type RateDatum struct {
+	Text       string `xml:",chardata"`
+	Stage      string `xml:"stage,attr"`
+	StageUnits string `xml:"stageUnits,attr"`
+	Flow       string `xml:"flow,attr"`
+	FlowUnits  string `xml:"flowUnits,attr"`
+}
+
+type PointDatum struct {
+	Text  string `xml:",chardata"`
+	Valid struct {
+		Text     string `xml:",chardata"`
+		Timezone string `xml:"timezone,attr"`
+	} `xml:"valid"`
+	Primary struct {
+		Text  string `xml:",chardata"`
+		Name  string `xml:"name,attr"`
+		Units string `xml:"units,attr"`
+	} `xml:"primary"`
+	Secondary struct {
+		Text  string `xml:",chardata"`
+		Name  string `xml:"name,attr"`
+		Units string `xml:"units,attr"`
+	} `xml:"secondary"`
+	Pedts string `xml:"pedts"`
+}
+
 // Site is the object containing all of the information about this measuring site.
 type Site struct {
 	XMLName                   xml.Name `xml:"site"`
@@ -101,70 +128,24 @@ type Site struct {
 		Units string `xml:"units,attr"`
 	} `xml:"zerodatum"`
 	Rating struct {
-		Text    string `xml:",chardata"`
-		Dignity string `xml:"dignity,attr"`
-		Datum   []struct {
-			Text       string `xml:",chardata"`
-			Stage      string `xml:"stage,attr"`
-			StageUnits string `xml:"stageUnits,attr"`
-			Flow       string `xml:"flow,attr"`
-			FlowUnits  string `xml:"flowUnits,attr"`
-		} `xml:"datum"`
+		Text    string      `xml:",chardata"`
+		Dignity string      `xml:"dignity,attr"`
+		Datum   []RateDatum `xml:"datum"`
 	} `xml:"rating"`
 	AltRating struct {
-		Text    string `xml:",chardata"`
-		Dignity string `xml:"dignity,attr"`
-		Datum   []struct {
-			Text       string `xml:",chardata"`
-			Stage      string `xml:"stage,attr"`
-			StageUnits string `xml:"stageUnits,attr"`
-			Flow       string `xml:"flow,attr"`
-			FlowUnits  string `xml:"flowUnits,attr"`
-		} `xml:"datum"`
+		Text    string      `xml:",chardata"`
+		Dignity string      `xml:"dignity,attr"`
+		Datum   []RateDatum `xml:"datum"`
 	} `xml:"alt_rating"`
 	Observed struct {
-		Text  string `xml:",chardata"`
-		Datum []struct {
-			Text  string `xml:",chardata"`
-			Valid struct {
-				Text     string `xml:",chardata"`
-				Timezone string `xml:"timezone,attr"`
-			} `xml:"valid"`
-			Primary struct {
-				Text  string `xml:",chardata"`
-				Name  string `xml:"name,attr"`
-				Units string `xml:"units,attr"`
-			} `xml:"primary"`
-			Secondary struct {
-				Text  string `xml:",chardata"`
-				Name  string `xml:"name,attr"`
-				Units string `xml:"units,attr"`
-			} `xml:"secondary"`
-			Pedts string `xml:"pedts"`
-		} `xml:"datum"`
+		Text  string       `xml:",chardata"`
+		Datum []PointDatum `xml:"datum"`
 	} `xml:"observed"`
 	Forecast struct {
-		Text     string `xml:",chardata"`
-		Timezone string `xml:"timezone,attr"`
-		Issued   string `xml:"issued,attr"`
-		Datum    []struct {
-			Text  string `xml:",chardata"`
-			Valid struct {
-				Text     string `xml:",chardata"`
-				Timezone string `xml:"timezone,attr"`
-			} `xml:"valid"`
-			Primary struct {
-				Text  string `xml:",chardata"`
-				Name  string `xml:"name,attr"`
-				Units string `xml:"units,attr"`
-			} `xml:"primary"`
-			Secondary struct {
-				Text  string `xml:",chardata"`
-				Name  string `xml:"name,attr"`
-				Units string `xml:"units,attr"`
-			} `xml:"secondary"`
-			Pedts string `xml:"pedts"`
-		} `xml:"datum"`
+		Text     string       `xml:",chardata"`
+		Timezone string       `xml:"timezone,attr"`
+		Issued   string       `xml:"issued,attr"`
+		Datum    []PointDatum `xml:"datum"`
 	} `xml:"forecast"`
 }
 
