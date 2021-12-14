@@ -253,7 +253,6 @@ func GetSite(gauge string) (*Site, error) {
 }
 
 func getSite(ahps2url, gauge string) (*Site, error) {
-	site := &Site{}
 	u, _ := url.Parse(ahps2url)
 	q := u.Query()
 	q.Set("gage", gauge)
@@ -278,7 +277,12 @@ func getSite(ahps2url, gauge string) (*Site, error) {
 		return nil, err
 	}
 
-	err = xml.Unmarshal(body, &site)
+	return unMarshalSite(body)
+}
+
+func unMarshalSite(data []byte) (*Site, error) {
+	site := &Site{}
+	err := xml.Unmarshal(data, &site)
 	if err != nil {
 		return nil, err
 	}
