@@ -15,7 +15,7 @@ const (
 	TIMEFORMAT = "2006-01-02T15:04:05-07:00"
 )
 
-type RateDatum struct {
+type rateDatum struct {
 	Text       string `xml:",chardata"`
 	Stage      string `xml:"stage,attr"`
 	StageUnits string `xml:"stageUnits,attr"`
@@ -23,7 +23,7 @@ type RateDatum struct {
 	FlowUnits  string `xml:"flowUnits,attr"`
 }
 
-type PointDatum struct {
+type pointDatum struct {
 	Text      string  `xml:",chardata"`
 	Timestamp pdValid `xml:"valid"`
 	Primary   struct {
@@ -56,7 +56,9 @@ func (pd *pdValid) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 }
 
 // Site is the object containing all of the information about this measuring site.
-type Site struct {
+type Site struct{ site }
+
+type site struct {
 	XMLName                   xml.Name `xml:"site"`
 	Text                      string   `xml:",chardata"`
 	Xsi                       string   `xml:"xsi,attr"`
@@ -144,22 +146,22 @@ type Site struct {
 	Rating struct {
 		Text    string      `xml:",chardata"`
 		Dignity string      `xml:"dignity,attr"`
-		Datum   []RateDatum `xml:"datum"`
+		Datum   []rateDatum `xml:"datum"`
 	} `xml:"rating"`
 	AltRating struct {
 		Text    string      `xml:",chardata"`
 		Dignity string      `xml:"dignity,attr"`
-		Datum   []RateDatum `xml:"datum"`
+		Datum   []rateDatum `xml:"datum"`
 	} `xml:"alt_rating"`
 	Observed struct {
 		Text  string       `xml:",chardata"`
-		Datum []PointDatum `xml:"datum"`
+		Datum []pointDatum `xml:"datum"`
 	} `xml:"observed"`
 	Forecast struct {
 		Text     string       `xml:",chardata"`
 		Timezone string       `xml:"timezone,attr"`
 		Issued   string       `xml:"issued,attr"`
-		Datum    []PointDatum `xml:"datum"`
+		Datum    []pointDatum `xml:"datum"`
 	} `xml:"forecast"`
 }
 
@@ -174,9 +176,9 @@ type RiverPoint struct {
 // This function assumes Sigstages are always in order
 func (s *Site) GetStage() (string, error) {
 	resp := "unknown"
-	mostRecent := s.Observed.Datum[0]
+	mostRecent := s.site.Observed.Datum[0]
 	cLevel := mostRecent.Primary.Value
-	stages := s.Sigstages
+	stages := s.site.Sigstages
 	v := reflect.ValueOf(stages)
 	typeOfS := v.Type()
 	for i := 1; i < v.NumField(); i++ {
@@ -260,11 +262,11 @@ func getSite(ahps2url, gauge string) (*Site, error) {
 }
 
 func unMarshalSite(data []byte) (*Site, error) {
-	site := Site{}
+	site := site{}
 	err := xml.Unmarshal(data, &site)
 	if err != nil {
 		return nil, err
 	}
 
-	return &site, nil
+	return &Site{site}, nil
 }
