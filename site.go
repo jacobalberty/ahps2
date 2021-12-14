@@ -249,8 +249,12 @@ func (s *Site) GetCrest() (*RiverPoint, error) {
 // GetSite retrieves the data for the specified gauge and unmarshals it into a Site object
 // It returns a site object and any error occurred during retrieval and unmarshalling
 func GetSite(gauge string) (*Site, error) {
+	return getSite(AHPS2_URL, gauge)
+}
+
+func getSite(ahps2url, gauge string) (*Site, error) {
 	site := &Site{}
-	u, _ := url.Parse(AHPS2_URL)
+	u, _ := url.Parse(ahps2url)
 	q := u.Query()
 	q.Set("gage", gauge)
 	u.RawQuery = q.Encode()
