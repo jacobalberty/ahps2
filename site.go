@@ -238,7 +238,7 @@ func getSite(ahps2url, gauge string) (*Site, error) {
 	u.RawQuery = q.Encode()
 
 	Client := http.Client{
-		Timeout: time.Second * 2, // Maximum of 2 secs
+		Timeout: time.Second * 5, // Maximum of 5 seconds
 	}
 
 	req, err := http.NewRequest(http.MethodGet, u.String(), nil)
