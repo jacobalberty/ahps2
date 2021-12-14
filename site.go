@@ -55,8 +55,18 @@ func (pd *pdValid) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 	return nil
 }
 
+type Sigstage struct {
+	Stage string
+	Value float64
+	Units string
+}
+
 // Site is the object containing all of the information about this measuring site.
-type Site struct{ site }
+type Site struct {
+	site
+	// This is a list of the different flood stages for the site you are examining.
+	Sigstages map[string]Sigstage
+}
 
 type site struct {
 	XMLName                   xml.Name `xml:"site"`
@@ -177,14 +187,9 @@ func (s *Site) GetStage() (string, error) {
 	resp := "unknown"
 	mostRecent := s.site.Observed.Datum[0]
 	cLevel := mostRecent.Primary.Value
-	stages := s.site.Sigstages
-	v := reflect.ValueOf(stages)
-	typeOfS := v.Type()
-	for i := 1; i < v.NumField(); i++ {
-		FName := typeOfS.Field(i).Name
-		FVal := v.Field(i).FieldByName("Value").Float()
-		if cLevel >= FVal  {
-			resp = strings.ToLower(FName)
+	for _, v := range s.Sigstages {
+		if cLevel >= v.Value {
+			resp = v.Stage
 		}
 	}
 	return resp, nil
@@ -263,6 +268,21 @@ func unMarshalSite(data []byte) (*Site, error) {
 	if err != nil {
 		return nil, err
 	}
+	s := &Site{
+		site:      site,
+		Sigstages: make(map[string]Sigstage),
+	}
+	stages := site.Sigstages
+	v := reflect.ValueOf(stages)
+	typeOfS := v.Type()
+	for i := 1; i < v.NumField(); i++ {
+		FName := strings.ToLower(typeOfS.Field(i).Name)
+		s.Sigstages[FName] = Sigstage{
+			Stage: FName,
+			Value: v.Field(i).FieldByName("Value").Float(),
+			Units: v.Field(i).FieldByName("Units").String(),
+		}
+	}
 
-	return &Site{site: site}, nil
+	return s, nil
 }
