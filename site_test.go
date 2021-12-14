@@ -2,7 +2,9 @@ package ahps2
 
 import (
 	_ "embed"
+	"math"
 	"testing"
+	"time"
 )
 
 const (
@@ -50,5 +52,24 @@ func TestGetStage(t *testing.T) {
 	}
 	if _, ok := validStages[stage]; ok {
 		t.Errorf("Got invalid stage '%s'", stage)
+	}
+}
+
+func TestGetLevel(t *testing.T) {
+	cst := time.FixedZone("CST", int((-6 * time.Hour).Seconds()))
+	site := returnDummySite()
+	level, err := site.GetLevel()
+	if err != nil {
+		t.Errorf("Got error from GetStage: %s", err.Error())
+	}
+	eTime := time.Date(2021, 12, 14, 10, 00, 00, 00, cst)
+	eValue := 7.67
+
+	if !level.Timestamp.Equal(eTime) {
+		t.Errorf("Time for most recent level was not correct.\nExpected: %v, got %v", eTime, level.Timestamp)
+	}
+
+	if diff := math.Abs(level.Value - eValue); diff > 0.001 {
+		t.Errorf("Value for most recent level was not correct.\nExpected: %.2f, got %.2f", eValue, level.Value)
 	}
 }
